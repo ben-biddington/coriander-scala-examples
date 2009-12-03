@@ -8,8 +8,8 @@ import org.hamcrest.core.IsEqual._
 import org.coriander.learning.scala.TestBase
 
 class Zip extends TestBase {
-	var even 		= List(0, 2, 4, 6, 8)
-	var odd 		= List(1, 3, 5, 7, 9)
+	var even	= List range(0, 8, 2)
+	var odd 	= List range(1, 9, 2)
 
 	@Test
 	def zip_joins_two_lists_together_by_combining_items_at_the_same_index_into_a_tuple_2 {

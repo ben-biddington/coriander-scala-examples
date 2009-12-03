@@ -31,7 +31,7 @@ class FunctionObjects {
 
 	def cubeByFunction1(number : Int, using : Function1[Int, Int]) : Int = using (number)
 
-	def cubeByLambda(number : Int, using 	: Int => Int) : Int = using (number)
+	def cubeByLambda(number : Int, using : Int => Int) : Int = using (number)
 }
 
 object Square {

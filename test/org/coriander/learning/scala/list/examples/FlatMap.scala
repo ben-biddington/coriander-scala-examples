@@ -10,10 +10,8 @@ import org.coriander.learning.scala.TestBase
 class FlatMap extends TestBase {
 	@Test
 	def flatmap_does_what {
-		val list = List(1, 2, 3)
-		val result = list.flatMap(item => "(" + item + ")")
-
-		Console println result
+		val list = 1 to 3
+		val result = list.flatMap(item => "(" + item + ")");
 	}
 
 	@Test
