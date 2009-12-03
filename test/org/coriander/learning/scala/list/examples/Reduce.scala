@@ -17,4 +17,14 @@ class Reduce extends TestBase {
 
 		assertThat(result, is(equalTo(expectedResult)))
 	}
+
+	@Test
+	def reduce_left_combines_list_items_right_to_left {
+		val list = List(1, 2, 3, 4, 5)
+		val expectedResult = (1 + 2) + (3 + 4) + 5
+
+		val result = list reduceLeft((left, right) => left + right)
+
+		assertThat(result, is(equalTo(expectedResult)))
+	}
 }
