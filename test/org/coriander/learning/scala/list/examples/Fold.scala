@@ -20,7 +20,7 @@ class Fold extends TestBase {
 		assertThat(actual, is(equalTo(expected)))
 	}
 	@Test
-	def fold_right_combines_list_elements_from_end_to_start_zero_using_binary_function {
+	def fold_right_combines_list_elements_from_end_to_start_using_binary_function {
 		val startingValue = 0
 		val list = 1 to 3
 
