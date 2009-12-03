@@ -6,6 +6,7 @@ import org.hamcrest.core.Is._
 import org.hamcrest.core.IsNot._
 import org.hamcrest.core.IsEqual._
 
+// @See: http://creativekarma.com/ee.php/weblog/comments/scala_function_objects_from_a_java_perspective/
 class FunctionObjects {
     @Test
 	def a_function_object_has_one_or_more_apply_methods {
