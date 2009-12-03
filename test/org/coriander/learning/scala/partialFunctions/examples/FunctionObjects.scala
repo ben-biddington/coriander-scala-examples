@@ -33,15 +33,15 @@ class FunctionObjects {
     }
 
 	def cubeByFunction1(
-		number : Int,
-		using : Function1[Int, Int]
+		number 	: Int,
+		using 	: Function1[Int, Int]
 	) = {
 		using (number)
 	}
 
 	def cubeByLambda(
-		number : Int,
-		using : Int => Int
+		number 	: Int,
+		using 	: Int => Int
 	) = {
 		using (number)	
 	}
