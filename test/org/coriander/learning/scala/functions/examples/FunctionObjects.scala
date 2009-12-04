@@ -29,9 +29,20 @@ class FunctionObjects {
 		assertThat(cubeByLambda(	2, Cube), is(equalTo(expected)))
     }
 
-	def cubeByFunction1(number : Int, using : Function1[Int, Int]) : Int = using (number)
+	@Test
+	def lambdas_can_be_declared_with_anonymous_arguments {
+		val functionOfTwoIntegers 		: (Int, Int) => Int = (x : Int, y : Int) => x * y;
+		val anonFunctionOfTwoIntegers 	: (Int, Int) => Int = (_*_)
 
-	def cubeByLambda(number : Int, using : Int => Int) : Int = using (number)
+		assertThat(
+			"The two different representations should be equivalent",
+			functionOfTwoIntegers(2, 2), is(equalTo(anonFunctionOfTwoIntegers(2, 2)))
+		)
+	}
+
+	private def cubeByFunction1(number : Int, using : Function1[Int, Int]) : Int = using (number)
+
+	private def cubeByLambda(number : Int, using : Int => Int) : Int = using (number)
 }
 
 object Square {
