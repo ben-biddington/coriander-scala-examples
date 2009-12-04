@@ -40,6 +40,11 @@ class FunctionObjects {
 		)
 	}
 
+	@Test
+	def in_what_other_language_is_a_backside_a_valid_anonymous_function {
+		val buttFunction : (Int, Int) => Int = (_*_);
+	}
+
 	private def cubeByFunction1(number : Int, using : Function1[Int, Int]) : Int = using (number)
 
 	private def cubeByLambda(number : Int, using : Int => Int) : Int = using (number)
