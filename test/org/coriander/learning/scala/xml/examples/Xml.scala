@@ -37,7 +37,7 @@ class Xml extends TestBase {
 				<artist aka="Akon">Andrew Conn</artist>
 			</album>
 
-		val andrewIsAlsoKnownAs : NodeSeq = (xml \\ "album" \ "artist" first) attribute("aka") get
+		val andrewIsAlsoKnownAs = (xml \\ "album" \ "artist" first) attribute("aka") get
 
 		assertThat(andrewIsAlsoKnownAs toString, is(equalTo("Akon")))
 	}
