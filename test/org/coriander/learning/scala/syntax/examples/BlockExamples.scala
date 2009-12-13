@@ -13,11 +13,11 @@ class BlockExamples {
 	@Test def
 	for_example_blocks_can_be_used_for_automatic_resource_management {
 		given_a_disposable_resource
-		even_when_an_exception_is_thrown_inside_block
-		the_resource_is_still_disposed
+		even_when_an_exception_is_thrown_inside_using_block
+		then_resource_is_still_disposed
 	}
 
-	def even_when_an_exception_is_thrown_inside_block {
+	def even_when_an_exception_is_thrown_inside_using_block {
 		try {
 			using(disposable) { disposable =>
 				//
@@ -35,7 +35,7 @@ class BlockExamples {
 		disposable = mock(classOf[Disposable])
 	}
 
-	def the_resource_is_still_disposed {
+	def then_resource_is_still_disposed {
 		verify(disposable, times(1)).dispose				
 	}
 }
