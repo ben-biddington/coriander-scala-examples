@@ -17,9 +17,22 @@ class BlockExamples {
 		then_resource_is_still_disposed
 	}
 
+	@Test def
+	blocks_can_clean_up_a_splat_of_resources {
+		val aDisposableObject = mock(classOf[Disposable])
+		val anotherDisposableObject = mock(classOf[Disposable])
+
+		using (aDisposableObject, anotherDisposableObject) { () =>
+			
+		}
+
+		verify(aDisposableObject, times(1)).dispose
+		verify(anotherDisposableObject, times(1)).dispose
+	}
+
 	def even_when_an_exception_is_thrown_inside_using_block {
 		try {
-			using(disposable) { disposable =>
+			using (disposable) { () =>
 				//
 				// Any other processing with the resource
 				//
@@ -36,7 +49,7 @@ class BlockExamples {
 	}
 
 	def then_resource_is_still_disposed {
-		verify(disposable, times(1)).dispose				
+		verify(disposable, times(1)).dispose
 	}
 }
 
@@ -45,12 +58,12 @@ trait Disposable {
 }
 
 object using {
-	def apply(resource : Disposable) (block : Disposable => Unit) {
+	def apply(resources : Disposable*) (block : () => Unit) {
 		try {
-			block(resource)	
+			block
 		} finally {
-			if (resource != null) {
-				resource.dispose
+			if (resources != null) {
+				resources.foreach(_.dispose)
 			}
 		}
 	}
