@@ -11,34 +11,34 @@ import collection.mutable.ArrayBuffer
 
 class ActorExamples {
     @Test
-	def example_concurrently_processing_a_list { 
-		val list = List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	def each_actor_represents_a_thread {
+		println("[" + currentThread.getId.toString + "] Starting...")
+		startProcess(List(1, 2, 3, 4, 5))
+		startProcess(List(1, 2, 3, 4, 5))
+		startProcess(List(6, 7, 8, 9, 10))
+		startProcess(List(6, 7, 8, 9, 10))
 
-		var result : List[Int] = List()
+		Thread.sleep(2000)
 
+		println("[" + currentThread.getId.toString + "] Done ")
+    }
+
+	private def startProcess(list : Iterable[Int]) {
 		val newThread = actor {
 			loop {
-				react {
-					case array : ArrayBuffer[Int] => {
-						val threadId = currentThread.getId
-
-						println("[" + threadId.toString + "] Received: " + array)
+				receive {
+					case list : List[Int] => {
+						Thread.sleep(1000)
+						self ! done ("[" + currentThread.getId.toString + "] Received: " + list)
 					}
 				}
 			}
 		}
 
-		println(currentThread.getId)
+		newThread ! list
+	}
 
-		val iterator = list.elements
-
-		val str = Stream.fromIterator(iterator)
-
-		val (listA, listB) = str.partition(_ > 5)
-
-		newThread ! listA
-		newThread ! listB
-
-		println(currentThread.getId)
-    }
+	private def done(message : String) {
+		println(message)
+	}
 }
