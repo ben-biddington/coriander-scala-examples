@@ -1,16 +1,16 @@
 package org.coriander.learning.scala.concurrency.examples
 
+import java.lang.Thread._
 import _root_.scala.actors.Actor._
+import collection.mutable.ListBuffer
 import org.junit.Assert._
 import org.hamcrest.core.Is._
 import org.hamcrest.core.IsNot._
 import org.hamcrest.core.IsEqual._
-import java.lang.Thread._
-import actors.Actor
-import org.junit.{Test}
-import collection.mutable.ListBuffer
+import org.junit.Test
+import org.coriander.learning.scala.TestBase
 
-class ActorExamples {	
+class ActorExamples extends TestBase {
 	@Test
 	def bang_query_blocks_caller_until_actor_returns {
 		val anActorThatReturnsItsThreadId = actor {
@@ -31,14 +31,22 @@ class ActorExamples {
 
 	@Test
 	def parent_can_block_until_actors_all_complete {
+		val elapsed = time({
+			newSortingActor ! randomIntegers(1000)
+			newSortingActor ! randomIntegers(1000)
+			newSortingActor ! randomIntegers(1000)
+		})
+
+		val sortedList = reduce(3)
+
+		assertSorted(sortedList)
+	}
+
+	private def reduce(howMany : Int) : List[Int] = {
 		var result 		= new ListBuffer[Int]
 		var sortedCount = 0
 
-		newParallelSorter ! randomIntegers(100)
-		newParallelSorter ! randomIntegers(100)
-		newParallelSorter ! randomIntegers(100)
-
-		while (sortedCount < 3) {
+		while (sortedCount < howMany) {
 		  	receive {
 				case list : List[Int] => {
 					result.appendAll(list)
@@ -47,12 +55,11 @@ class ActorExamples {
 			}
 		}
 
-		val sortedList = result.toList
+		result.toList
+	}
 
-		console("Sort complete, and full list contains " + sortedList.size + " items")
-
-		assert(sortedList.first < sortedList.last)
-		assertThat(sortedList.length, is(equalTo(300)))
+	private def assertSorted(list : List[Int]) {
+		assert(list.first < list.last)		
 	}
 
 	private def randomIntegers(howMany : Int) = {
@@ -64,23 +71,15 @@ class ActorExamples {
 		result.toList
 	}
 
-	private def console(message : String) {
-		println("[" + currentThreadId + "] " + message)
-	}
-
-	val newParallelSorter : Actor = actor {
+	val newSortingActor = actor {
 		loop {
 			receive {
-				case list : List[Int] => {
-					reply(sort(list))
-				}
+				case list : List[Int] => reply(sort(list))
 			}
 		}
 	}
 
-	private def sort(list : List[Int]) : List[Int] = {
-		list sort(_<_)
-	}
-
+	private def console(message : String) = println("[" + currentThreadId + "] " + message);
+	private def sort(list : List[Int]) = list sort(_<_)
 	private def currentThreadId = currentThread.getId.toString
 }
