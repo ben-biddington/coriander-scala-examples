@@ -43,23 +43,35 @@ class ActorExamples extends TestBase {
 	}
 
 	private def reduce(howMany : Int) : List[Int] = {
-		var result 		= new ListBuffer[Int]
-		var sortedCount = 0
+		var sortedCount 		= 0
+		var result : List[Int] = List()
 
 		while (sortedCount < howMany) {
 		  	receive {
 				case list : List[Int] => {
-					result.appendAll(list)
+					result 		= merge(list, result, (_<_))
 					sortedCount += 1
 				}
 			}
 		}
 
-		result.toList
+		result
+	}
+
+	private def merge(
+		left 	: List[Int],
+		right 	: List[Int],
+		less 	: (Int, Int) => Boolean
+	) : List[Int] = {
+		if (left.isEmpty) 						right
+		else if (right.isEmpty) 				left
+		else if (less(left.head, right.head)) 	left.head :: merge(left.tail, right, less)
+		else 									right.head :: merge(left, right.tail, less)
 	}
 
 	private def assertSorted(list : List[Int]) {
-		assert(list.first < list.last)		
+		assertFalse("List is empty, is that intentional?", list.isEmpty)
+		assert(list.first < list.last)
 	}
 
 	private def randomIntegers(howMany : Int) = {
