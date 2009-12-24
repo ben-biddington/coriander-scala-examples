@@ -30,6 +30,21 @@ class ActorExamples extends TestBase {
 	}
 
 	@Test
+	def exceptions_need_to_be_specifically_communicated {
+		val anActorThatThrowsAnException = actor {
+			loop {
+				receive {
+					case _ => reply(new RuntimeException("An error occured on purpose."))
+				}
+			}
+		}
+
+		anActorThatThrowsAnException !? "xxx" match {
+			case error : Exception => { } 
+		}
+	}
+
+	@Test
 	def parent_can_block_until_actors_all_complete {
 		val elapsed = time({
 			newSortingActor ! randomIntegers(1000)
@@ -40,6 +55,24 @@ class ActorExamples extends TestBase {
 		val sortedList = reduce(3)
 
 		assertSorted(sortedList)
+	}
+
+	@Test
+	def the_actor_core_thread_pool_size_can_be_set_using_system {
+		val theValue = "5"
+
+		System.setProperty("actors.corePoolSize", theValue)
+
+		assertThat(System.getProperty("actors.corePoolSize"), is(equalTo(theValue)))
+	}
+
+	@Test
+	def the_actor_max_thread_pool_size_can_be_set_using_system {
+		val theValue = "200"
+
+		System.setProperty("actors.maxPoolSize", theValue)
+
+		assertThat(System.getProperty("actors.maxPoolSize"), is(equalTo(theValue)))
 	}
 
 	private def reduce(howMany : Int) : List[Int] = {
