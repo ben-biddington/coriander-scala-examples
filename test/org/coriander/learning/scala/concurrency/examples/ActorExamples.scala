@@ -9,18 +9,11 @@ import org.hamcrest.core.IsNot._
 import org.hamcrest.core.IsEqual._
 import org.junit.Test
 import org.coriander.learning.scala.TestBase
+import actors.Actor
 
 class ActorExamples extends TestBase {
 	@Test
 	def bang_query_blocks_caller_until_actor_returns {
-		val anActorThatReturnsItsThreadId = actor {
-			loop {
-				receive {
-					case _ => reply(currentThreadId)
-				}
-			}
-		}
-
 		anActorThatReturnsItsThreadId !? "xxx" match {
 			case reply : String => {
 				val actualThreadUsedByChildActor = reply
@@ -46,15 +39,19 @@ class ActorExamples extends TestBase {
 
 	@Test
 	def parent_can_block_until_actors_all_complete {
-		val elapsed = time({
-			newSortingActor ! randomIntegers(1000)
-			newSortingActor ! randomIntegers(1000)
-			newSortingActor ! randomIntegers(1000)
-		})
 
-		val sortedList = reduce(3)
+		anActorThatReturnsItsThreadId ! ""
+		anActorThatReturnsItsThreadId ! ""
+		anActorThatReturnsItsThreadId ! ""
 
-		assertSorted(sortedList)
+		var theNumberOfRunningActors = 3
+
+		while (theNumberOfRunningActors > 1) {
+			receive {
+				case threadId : String => theNumberOfRunningActors -= 1
+				case _ => throw new RuntimeException()
+			}
+		}
 	}
 
 	@Test
@@ -75,56 +72,37 @@ class ActorExamples extends TestBase {
 		assertThat(System.getProperty("actors.maxPoolSize"), is(equalTo(theValue)))
 	}
 
-	private def reduce(howMany : Int) : List[Int] = {
-		var sortedCount 		= 0
-		var result : List[Int] = List()
+	@Test
+	def messages_are_always_received_on_parent_thread {
+		val expectedThreadId = currentThreadId
 
-		while (sortedCount < howMany) {
-		  	receive {
-				case list : List[Int] => {
-					result 		= merge(list, result, (_<_))
-					sortedCount += 1
+		anActorThatReturnsItsThreadId ! ""
+		anActorThatReturnsItsThreadId ! ""
+		anActorThatReturnsItsThreadId ! ""
+
+		var theNumberOfRunningActors = 3
+
+		while (theNumberOfRunningActors > 0) {
+			receive {
+				case threadId : String => {
+					theNumberOfRunningActors -= 1
+					assertThat(currentThreadId, is(equalTo(expectedThreadId)))
+					assertThat(currentThreadId, is(not(equalTo(threadId))))
 				}
 			}
 		}
-
-		result
 	}
 
-	private def merge(
-		left 	: List[Int],
-		right 	: List[Int],
-		less 	: (Int, Int) => Boolean
-	) : List[Int] = {
-		if (left.isEmpty) 						right
-		else if (right.isEmpty) 				left
-		else if (less(left.head, right.head)) 	left.head :: merge(left.tail, right, less)
-		else 									right.head :: merge(left, right.tail, less)
-	}
+	// TEST: replies are buffered in sender's mailbox
 
-	private def assertSorted(list : List[Int]) {
-		assertFalse("List is empty, is that intentional?", list.isEmpty)
-		assert(list.first < list.last)
-	}
-
-	private def randomIntegers(howMany : Int) = {
-		val random = new java.util.Random()
-		var result = new ListBuffer[Int]
-
-		for (val i <- 0 until howMany) result += random.nextInt
-
-		result.toList
-	}
-
-	val newSortingActor = actor {
+	val anActorThatReturnsItsThreadId = actor {
 		loop {
 			receive {
-				case list : List[Int] => reply(sort(list))
+				case _ => reply(currentThreadId)
 			}
 		}
 	}
 
 	private def console(message : String) = println("[" + currentThreadId + "] " + message);
-	private def sort(list : List[Int]) = list sort(_<_)
 	private def currentThreadId = currentThread.getId.toString
 }
