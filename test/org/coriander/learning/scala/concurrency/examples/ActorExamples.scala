@@ -39,7 +39,6 @@ class ActorExamples extends TestBase {
 
 	@Test
 	def parent_can_block_until_actors_all_complete {
-
 		anActorThatReturnsItsThreadId ! ""
 		anActorThatReturnsItsThreadId ! ""
 		anActorThatReturnsItsThreadId ! ""
@@ -93,7 +92,18 @@ class ActorExamples extends TestBase {
 		}
 	}
 
-	// TEST: replies are buffered in sender's mailbox
+	@Test
+	def replies_are_buffered_in_mailbox_queue {
+		val expectedThreadId = currentThreadId
+
+		anActorThatReturnsItsThreadId ! ""
+		anActorThatReturnsItsThreadId ! ""
+		anActorThatReturnsItsThreadId ! ""
+
+		while (mailboxSize < 3) {}
+
+		assertThat(mailboxSize, is(equalTo(3)))
+	}
 
 	val anActorThatReturnsItsThreadId = actor {
 		loop {
