@@ -9,23 +9,34 @@ import org.hamcrest.core.IsNot._
 import org.hamcrest.core.IsEqual._
 import org.coriander.learning.scala.TestBase
 import collection.mutable.ListBuffer
-import actors.Future
+import actors.{Actor, Future}
 
-// @See: http://lampsvn.epfl.ch/trac/scala/browser/scala/tags/R_2_7_7_final/src/actors/scala/actors/Future.scala?view=markup
+// @See: http://scala-tools.org/scaladocs/scala-library/2.7.1/actors/Future.scala.html#Some(38)
 class FutureExamples extends TestBase {
 	val TIMEOUT = 1000 * 1000
 
-	@Test def double_bang_sends_message_to_actor_and_returns_new_future_representing_reply {
-		val aFuture = anActorThatSleepsAndReturnsItsThreadId !! ""
+	@Test
+	def double_bang_sends_message_to_actor_and_returns_new_future_representing_reply {
+		val aFuture = anActorThatSleepsAndReturnsItsThreadId(0) !! ""
 
 		val results = awaitAll(TIMEOUT, aFuture);
 
 		assertThat(results.first.get.toString, is(not(equalTo(currentThreadId))))
 	}
 
-	@Test def await_all_blocks_until_all_actors_have_completed {
-		val aFuture 		= anActorThatSleepsAndReturnsItsThreadId !! ""
-		val anotherFuture 	= anActorThatSleepsAndReturnsItsThreadId !! ""
+	@Test
+	def invoking_a_future_blocks_until_result_is_available {
+		val aFuture : Future[Any] = anActorThatSleepsAndReturnsItsThreadId(500) !! ""
+
+		val theThreadId = aFuture().asInstanceOf[String]
+
+		assertThat(theThreadId, is(not(equalTo(currentThreadId))))
+	}
+
+	@Test
+	def await_all_blocks_until_all_actors_have_completed {
+		val aFuture 		= anActorThatSleepsAndReturnsItsThreadId(0) !! ""
+		val anotherFuture 	= anActorThatSleepsAndReturnsItsThreadId(0) !! ""
 
 		val results : List[Option[Any]] = awaitAll(TIMEOUT, aFuture, anotherFuture);
 
@@ -76,14 +87,11 @@ class FutureExamples extends TestBase {
 		future[String] { Thread.sleep(1000); currentThreadId}
 	}
 
-	//	TEST: Applying a future blocks the current actor (self) until the future's value is available.
-	//	TEST: Requests are handled asynchronously, but return a representation (the future) that allows to await the reply.
-	//	TEST: Defining a future invokes actor internally
-
-	def anActorThatSleepsAndReturnsItsThreadId = actor {
+	def anActorThatSleepsAndReturnsItsThreadId(sleepPeriodInMilliseconds : Int) = actor {
 		loop {
 			receive {
 				case _ => {
+					Thread.sleep(sleepPeriodInMilliseconds)
 					reply(currentThreadId)
 				}
 			}
