@@ -36,8 +36,7 @@ class FutureExamples extends TestBase {
 	@Test
 	def ad_doc_future_defines_an_operation_to_be_invoked_asynchronously {
 		val aFuture = future[String] {
-			val theCurrentThreadId = currentThreadId
-			return theCurrentThreadId 
+			currentThreadId
 		};
 
 		assertThat(aFuture(), is(not(equalTo(currentThreadId))))
