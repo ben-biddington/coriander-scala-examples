@@ -71,6 +71,31 @@ class FutureExamples extends TestBase {
 	}
 
 	@Test
+	def you_can_also_wait_in_loop_for_futures_to_complete {
+		val futures = new ListBuffer[Future[String]]
+
+		futures += future[String] { "x" }
+		futures += future[String] { "y" }
+
+		val temp = new ListBuffer[String]
+
+		futures.foreach(f => temp += f())
+
+		val actual = temp.toList
+		val expected = List("x", "y")
+		assertThat(actual, is(equalTo(expected)))
+	}
+
+	@Test
+	def future_is_not_run_until_invoked {
+		var count = 0
+
+		val f = future { count = 1 }
+
+		assertThat(count, is(equalTo(0)))
+	}
+
+	@Test
 	@Ignore("Can't get it to pass")
 	def await_all_returns_None_if_a_future_times_out {
 		val aFuture = future { Thread.sleep(500); "x" }
