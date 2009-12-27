@@ -2,7 +2,6 @@ package org.coriander.learning.scala.concurrency.examples
 
 import _root_.scala.actors.Actor._
 import _root_.scala.actors.Futures._
-import org.junit.Test
 import org.junit.Assert._
 import org.hamcrest.core.Is._
 import org.hamcrest.core.IsNot._
@@ -10,6 +9,7 @@ import org.hamcrest.core.IsEqual._
 import org.coriander.learning.scala.TestBase
 import collection.mutable.ListBuffer
 import actors.{Actor, Future}
+import org.junit.{Ignore, Test}
 
 // @See: http://scala-tools.org/scaladocs/scala-library/2.7.1/actors/Future.scala.html#Some(38)
 class FutureExamples extends TestBase {
@@ -17,11 +17,11 @@ class FutureExamples extends TestBase {
 
 	@Test
 	def double_bang_sends_message_to_actor_and_returns_new_future_representing_reply {
-		val aFuture = anActorThatSleepsAndReturnsItsThreadId(0) !! ""
+		val aFuture = anActorThatReturnsItsThreadId !! ""
 
-		val results = awaitAll(TIMEOUT, aFuture);
+		val result = aFuture().asInstanceOf[String]
 
-		assertThat(results.first.get.toString, is(not(equalTo(currentThreadId))))
+		assertThat(result, is(not(equalTo(currentThreadId))))
 	}
 
 	@Test
@@ -34,39 +34,52 @@ class FutureExamples extends TestBase {
 	}
 
 	@Test
+	def ad_doc_future_defines_an_operation_to_be_invoked_asynchronously {
+		val aFuture = future[String] {
+			val theCurrentThreadId = currentThreadId
+			return theCurrentThreadId 
+		};
+
+		assertThat(aFuture(), is(not(equalTo(currentThreadId))))
+	}
+
+	@Test
+	def future_can_return_function_also_anf_this_function_is_invoked_on_parent_thread {
+		val theFuture = future(() => {
+			currentThreadId
+		})
+
+		val theFutureCallback : Function0[String] = theFuture()
+
+		assertThat("Expected that the callback should be invoked on parent thread.",
+			theFutureCallback(),
+			is(equalTo(currentThreadId))
+		)
+	}
+
+	@Test
 	def await_all_blocks_until_all_actors_have_completed {
-		val aFuture 		= anActorThatSleepsAndReturnsItsThreadId(0) !! ""
-		val anotherFuture 	= anActorThatSleepsAndReturnsItsThreadId(0) !! ""
+		val aFuture 		= future[String] { Thread.sleep(500); "x" }
+		val anotherFuture 	= future[String] { Thread.sleep(500); "y" }
 
 		val results : List[Option[Any]] = awaitAll(TIMEOUT, aFuture, anotherFuture);
 
 		assertThat("Expected two results", results.size, is(equalTo(2)))
+
+		results.count((result : Option[Any]) => result == None)
+
+		results.foreach((option : Option[Any]) => println(option.get))
 	}
 
 	@Test
-	def ad_doc_future_defines_an_operation_to_be_invoked_asynchronously {
-		val aFuture = future[String] {
-			currentThreadId
-		};
+	@Ignore("Can't get it to pass")
+	def await_all_returns_None_if_a_future_times_out {
+		val aFuture = future { Thread.sleep(500); "x" }
+		val results : List[Option[Any]] = awaitAll(2000, aFuture);
 
-		val results : List[Option[Any]] = awaitAll(TIMEOUT, aFuture);
-
-		assertThat(results.first.get.toString, is(not(equalTo(currentThreadId))))
-	}
-
-	@Test
-	def by_creating_a_future_of_function_type_a_callback_can_be_supplied_and_that_callback_is_invoked_on_parent_thread {
-		val theCallback : () => String = () => {currentThreadId}
-
-		val theFuture = future[() => String](theCallback)
-
-		val results : List[Option[Any]] = awaitAll(TIMEOUT, theFuture)
-
-		val f = results.first.get.asInstanceOf[() => String]
-
-		assertThat("Expected that the callback should be invoked on parent thread.",
-			f(),
-			is(equalTo(currentThreadId))
+		assertTrue(
+			"Expected <None> but was <" +  results.first + ">",
+			results.first == None
 		)
 	}
 
@@ -86,6 +99,8 @@ class FutureExamples extends TestBase {
 	private def newSimpleFuture = {
 		future[String] { Thread.sleep(1000); currentThreadId}
 	}
+
+	def anActorThatReturnsItsThreadId = anActorThatSleepsAndReturnsItsThreadId(0)
 
 	def anActorThatSleepsAndReturnsItsThreadId(sleepPeriodInMilliseconds : Int) = actor {
 		loop {
