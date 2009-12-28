@@ -13,6 +13,30 @@ import actors.Actor
 
 class ActorExamples extends TestBase {
 	@Test
+	def receive_is_a_blocking_call {
+		val anActor = actor {
+			receive {
+				case _ => {
+					reply("xxx")
+				}
+			}
+		}
+
+		anActor ! ""
+
+		val expected 	: String = "xxx"
+		var actual 		: String = null
+
+		Actor.self.receive {
+			case text : String => {
+				actual = text
+			}
+		}
+
+		assertThat(actual, is(equalTo(expected)))
+	}
+
+	@Test
 	def bang_query_blocks_caller_until_actor_returns {
 		anActorThatReturnsItsThreadId !? "xxx" match {
 			case reply : String => {
@@ -105,26 +129,9 @@ class ActorExamples extends TestBase {
 		assertThat(mailboxSize, is(equalTo(3)))
 	}
 
-	@Test
-	def receive_blocks_until_message_is_available {
-		val anActor = act {
-			receive {
-				case _ => {
-					reply(Thread.currentThread.getId)
-				}
-			}
-		}
-
-		val theActorThreadId = anActor ! ""
-
-		assertThat(theActorThreadId, is(not(equalTo(Thread.currentThread.getId))))
-	}
-
 	val anActorThatReturnsItsThreadId = actor {
-		loop {
-			receive {
-				case _ => reply(currentThreadId)
-			}
+		receive {
+			case _ => reply(currentThreadId)
 		}
 	}
 
