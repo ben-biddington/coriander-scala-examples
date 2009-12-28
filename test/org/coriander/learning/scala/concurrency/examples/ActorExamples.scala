@@ -105,6 +105,21 @@ class ActorExamples extends TestBase {
 		assertThat(mailboxSize, is(equalTo(3)))
 	}
 
+	@Test
+	def receive_blocks_until_message_is_available {
+		val anActor = act {
+			receive {
+				case _ => {
+					reply(Thread.currentThread.getId)
+				}
+			}
+		}
+
+		val theActorThreadId = anActor ! ""
+
+		assertThat(theActorThreadId, is(not(equalTo(Thread.currentThread.getId))))
+	}
+
 	val anActorThatReturnsItsThreadId = actor {
 		loop {
 			receive {

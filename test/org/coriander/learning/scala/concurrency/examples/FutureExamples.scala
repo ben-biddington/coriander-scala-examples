@@ -8,8 +8,8 @@ import org.hamcrest.core.IsNot._
 import org.hamcrest.core.IsEqual._
 import org.coriander.learning.scala.TestBase
 import collection.mutable.ListBuffer
-import actors.{Actor, Future}
 import org.junit.{Ignore, Test}
+import actors.{Channel, Actor, Future}
 
 // @See: http://scala-tools.org/scaladocs/scala-library/2.7.1/actors/Future.scala.html#Some(38)
 class FutureExamples extends TestBase {
@@ -26,7 +26,9 @@ class FutureExamples extends TestBase {
 
 	@Test
 	def invoking_a_future_blocks_until_result_is_available {
-		val aFuture : Future[Any] = anActorThatSleepsAndReturnsItsThreadId(500) !! ""
+		val aFuture : Future[String] = future[String] {
+			Thread.currentThread.getId.toString
+		}
 
 		val theThreadId = aFuture().asInstanceOf[String]
 
@@ -43,7 +45,7 @@ class FutureExamples extends TestBase {
 	}
 
 	@Test
-	def future_can_return_function_also_anf_this_function_is_invoked_on_parent_thread {
+	def future_can_return_function_and_this_function_is_invoked_on_parent_thread {
 		val theFuture = future(() => {
 			currentThreadId
 		})
@@ -64,10 +66,6 @@ class FutureExamples extends TestBase {
 		val results : List[Option[Any]] = awaitAll(TIMEOUT, aFuture, anotherFuture);
 
 		assertThat("Expected two results", results.size, is(equalTo(2)))
-
-		results.count((result : Option[Any]) => result == None)
-
-		results.foreach((option : Option[Any]) => println(option.get))
 	}
 
 	@Test
