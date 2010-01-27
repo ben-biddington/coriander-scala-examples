@@ -58,7 +58,7 @@ trait Disposable {
 }
 
 object using {
-	def apply(resources : Disposable*) (block : () => Unit) {
+	def apply(resources : Disposable*) (block : => Unit) {
 		try {
 			block
 		} finally {
